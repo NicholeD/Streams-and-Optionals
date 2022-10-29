@@ -5,10 +5,10 @@ import com.kenzie.streams.filevalidator.resources.ImporterManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileValidator {
-
     private List<String> sourceFileNames;
 
     /**
@@ -94,11 +94,12 @@ public class FileValidator {
      */
     public List<String> validateFilesStream() {
         Stream<String> fileNameStream = createStream(sourceFileNames);
-        fileNameStream = makeLowerCaseStream(fileNameStream);
-        fileNameStream = removeDraftFilesStream(fileNameStream);
-        fileNameStream = removeHiddenFilesStream(fileNameStream);
-        fileNameStream = sortListStream(fileNameStream);
-        return collectStreamResults(fileNameStream);
+
+        return  fileNameStream.map(String::toLowerCase)
+                .filter(i -> !(i.contains("_draft")))
+                .filter (i -> !(i.startsWith(".")))
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     /**
@@ -108,7 +109,7 @@ public class FileValidator {
      * @return Created stream.
      */
     public Stream<String> createStream(List<String> files) {
-        return null;
+        return files.stream();
     }
 
     /**
@@ -118,7 +119,7 @@ public class FileValidator {
      * @return Processed stream.
      */
     public Stream<String> makeLowerCaseStream(Stream<String> stream) {
-        return stream;
+        return stream.map(String::toLowerCase);
     }
 
     /**
@@ -128,7 +129,7 @@ public class FileValidator {
      * @return Processed stream.
      */
     public Stream<String> removeDraftFilesStream(Stream<String> stream) {
-        return stream;
+        return stream.filter(i -> !(i.contains("_draft")));
     }
 
     /**
@@ -138,7 +139,7 @@ public class FileValidator {
      * @return Processed stream.
      */
     public Stream<String> removeHiddenFilesStream(Stream<String> stream) {
-        return stream;
+        return stream.filter (i -> !i.startsWith("."));
     }
 
     /**
@@ -148,7 +149,7 @@ public class FileValidator {
      * @return Processed stream.
      */
     public Stream<String> sortListStream(Stream<String> stream) {
-        return stream;
+        return stream.sorted();
     }
 
     /**
@@ -158,7 +159,6 @@ public class FileValidator {
      * @return List of results.
      */
     public List<String> collectStreamResults(Stream<String> stream) {
-        return null;
+        return stream.collect(Collectors.toList());
     }
-
 }
