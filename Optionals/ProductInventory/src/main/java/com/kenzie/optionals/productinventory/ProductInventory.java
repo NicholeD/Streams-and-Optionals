@@ -1,9 +1,6 @@
 package com.kenzie.optionals.productinventory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * ProductInventory collects groups of items to be shipped. It uses a 
@@ -36,7 +33,25 @@ public class ProductInventory {
      * @return Map[Integer, String] of product IDs to product names. Does not include products without names.
      */
     Map<Integer, String> findProductNames() {
-        return new HashMap<Integer, String>();  // Placeholder
+        Map<Integer, String> productNames = new HashMap<Integer, String>();
+
+        Optional.ofNullable(this.productUtility)
+                        .orElseThrow(() -> new IllegalArgumentException("productUtility is null"));
+        Optional.ofNullable(this.productIDs)
+                        .orElseThrow(() -> new IllegalArgumentException("productID is null"));
+
+        Optional.of(this.productIDs).orElse(Collections.emptyList())
+                .stream()
+                .forEach(id -> {
+                        if(Optional.ofNullable(id).isPresent() &&
+                    Optional.ofNullable(productUtility.findProductName(id)).isPresent()) {
+                        productNames.put(Optional.ofNullable(id)
+                                .orElseThrow(() -> new IllegalArgumentException("productID is null")),
+                                Optional.ofNullable(productUtility.findProductName(id))
+                                        .orElseThrow(() -> new IllegalArgumentException("product name is null")));
+                }});
+
+        return productNames;
     }
 
     /**
@@ -45,6 +60,11 @@ public class ProductInventory {
      * @return Optional[Boolean] containing whether a product is ready to ship.
      */
     Optional<Boolean> isProductReady(Integer productID) {
-        return Optional.empty();  // Placeholder
+        Optional.ofNullable(productID)
+                .orElseThrow(() -> new IllegalArgumentException("The productID was null"));
+
+        Boolean isReady = productUtility.isProductReady(productID);
+
+        return Optional.ofNullable(isReady);
     }
 }
