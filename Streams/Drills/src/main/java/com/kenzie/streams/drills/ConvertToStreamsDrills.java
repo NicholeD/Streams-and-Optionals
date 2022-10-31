@@ -6,12 +6,11 @@ import com.kenzie.streams.drills.resources.Rank;
 import com.kenzie.streams.drills.resources.Suit;
 import com.kenzie.streams.drills.resources.User;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Convert the following methods from using for loops to
@@ -25,11 +24,13 @@ public class ConvertToStreamsDrills {
      * @return a list of square roots of the numbers.
      */
     public static List<Double> returnSquareRoot(List<Integer> numbers) {
-        List<Double> result = new ArrayList<>();
-        for (int number : numbers) {
-            result.add(Math.sqrt(number));
+        if (numbers != null) {
+            return numbers.stream()
+                    .map(i -> Math.sqrt(i))
+                    .collect(Collectors.toList());
         }
-        return result;
+
+        return Collections.emptyList();
     }
 
     /**
@@ -38,11 +39,12 @@ public class ConvertToStreamsDrills {
      * @return a list of Users' ages.
      */
     public static List<Integer> getAgeFromUsers(List<User> users) {
-        List<Integer> result = new ArrayList<>();
-        for (User user : users) {
-            result.add(user.getAge());
+        if (users != null) {
+            return users.stream()
+                    .map(i -> i.getAge())
+                    .collect(Collectors.toList());
         }
-        return result;
+        return Collections.emptyList();
     }
 
     /**
@@ -51,13 +53,13 @@ public class ConvertToStreamsDrills {
      * @return a distinct list of Users ages.
      */
     public static List<Integer> getDistinctAges(List<User> users) {
-        List<Integer> result = new ArrayList<>();
-        for (User user : users) {
-            if (!result.contains(user.getAge())) {
-                result.add(user.getAge());
-            }
+        if (users != null) {
+            List<Integer> usersAges = getAgeFromUsers(users);
+            return usersAges.stream()
+                    .distinct()
+                    .collect(Collectors.toList());
         }
-        return result;
+        return Collections.emptyList();
     }
 
     /**
@@ -67,11 +69,13 @@ public class ConvertToStreamsDrills {
      * @return a sublist of the input list of Users.
      */
     public static List<User> getLimitedUserList(List<User> users, int limit) {
-        List<User> result = new ArrayList<>();
-        for (int i = 0; i < limit && i < users.size(); i++) {
-            result.add(users.get(i));
+        if (users != null) {
+            return users.stream()
+                    .limit(limit)
+                    .collect(Collectors.toList());
         }
-        return result;
+
+        return Collections.emptyList();
     }
 
     /**
@@ -80,13 +84,12 @@ public class ConvertToStreamsDrills {
      * @return the total count of Users whose age is > 25.
      */
     public static long countUsersOlderThan25(List<User> users) {
-        int count = 0;
-        for (User user : users) {
-            if (user.getAge() > 25) {
-                count++;
-            }
+        if (users != null) {
+            return users.stream()
+                    .filter(i -> i.getAge()> 25)
+                    .count();
         }
-        return count;
+        return 0;
     }
 
     /**
@@ -99,10 +102,10 @@ public class ConvertToStreamsDrills {
      * @return an Optional User whose name matches the input
      */
     public static Optional<User> findAny(List<User> users, String name) {
-        for (User user : users) {
-            if (user.getName().equals(name)) {
-                return Optional.of(user);
-            }
+        if (users != null) {
+            return users.stream()
+                    .filter(i -> i.getName() == name)
+                    .findFirst();
         }
         return Optional.empty();
     }
@@ -114,18 +117,14 @@ public class ConvertToStreamsDrills {
      * @return Dishes that are low in calories, sorted by number of calories.
      */
     public static List<String> sortDishesByCalories(List<Dish> menu) {
-        List<Dish> lowCaloricDishes = new LinkedList<>();
-        for (Dish dish : menu) {
-            if (dish.getCalories() < 400) {
-                lowCaloricDishes.add(dish);
-            }
+        if (menu != null) {
+            return menu.stream()
+                    .filter(i -> i.getCalories() < 400)
+                    .map(i -> i.getName())
+                    .sorted()
+                    .collect(Collectors.toList());
         }
-        Collections.sort(lowCaloricDishes, Comparator.comparingInt(Dish::getCalories));
-        List<String> lowCaloricDishesNames = new ArrayList<>();
-        for (Dish dish : lowCaloricDishes) {
-            lowCaloricDishesNames.add(dish.getName());
-        }
-        return lowCaloricDishesNames;
+        return Collections.emptyList();
     }
 
     /**
@@ -133,12 +132,12 @@ public class ConvertToStreamsDrills {
      * @return every card that should be in a deck
      */
     public static List<Card> newDeck() {
-        List<Card> result = new ArrayList<>();
-        for (Suit suit : Suit.values()) {
-            for (Rank rank : Rank.values()) {
-                result.add(new Card(suit, rank));
-            }
-        }
-        return result;
+      return Stream.of(Suit.values())
+              .flatMap(suit ->
+                      Stream.of(Rank.values())
+                              .map(rank -> {
+                  return new Card(suit, rank);
+              }))
+              .collect(Collectors.toList());
     }
 }
