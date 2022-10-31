@@ -1,8 +1,6 @@
 package com.kenzie.optionals.publisher.optionals.models;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Book {
     private final String isbn;
@@ -62,7 +60,15 @@ public class Book {
      *     have been left.
      */
     public Optional<Double> getWeightedRating() {
-        return Optional.empty();  // Placeholder
+        Optional<IntSummaryStatistics> statistics = Optional.ofNullable(starRatings.stream()
+                .mapToInt(Integer::intValue)
+                .summaryStatistics());
+
+        if (statistics.isPresent() && statistics.get().getCount() == 0) {
+            return Optional.empty();
+        } else {
+            return statistics.map(IntSummaryStatistics::getAverage);
+        }
     }
 
     /**
@@ -71,6 +77,15 @@ public class Book {
      *     if any.
      */
     public Optional<Printing> getPaperback() {
-        return Optional.empty();  // Placeholder
+        Printing latestPaperback = null;
+        for(Printing printing : printings) {
+            if (printing.getPrintingType() == PrintingType.PAPERBACK) {
+                if(latestPaperback == null || latestPaperback.getPrintDate().before(printing.getPrintDate())) {
+                    latestPaperback = printing;
+                }
+            }
+
+        }
+        return Optional.ofNullable(latestPaperback);
     }
 }
