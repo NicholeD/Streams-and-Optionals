@@ -1,6 +1,9 @@
 package com.kenzie.optionals.publisher.optionals;
 
 import com.kenzie.optionals.publisher.optionals.dao.AuthorDao;
+import com.kenzie.optionals.publisher.optionals.models.Author;
+import com.kenzie.optionals.publisher.optionals.models.Book;
+import com.kenzie.optionals.publisher.optionals.models.Printing;
 import com.kenzie.optionals.publisher.optionals.models.Publisher;
 
 import java.util.Optional;
@@ -27,9 +30,18 @@ public class GetPublisherOfBestRatedPaperbackForAuthorActivity {
             throw new IllegalArgumentException("Author must not be null!");
         }
 
-        // Your code goes here
+        Optional<Author> author = authorDao.findAuthorByName(authorName);
+
+        if(author.isPresent()) {
+            Optional<Book> bestRatedBook = author.get().getBestRatedBook();
+            if (bestRatedBook.isPresent()) {
+                Optional<Printing> paperback = bestRatedBook.get().getPaperback();
+                if (paperback.isPresent()) {
+                    return paperback.get().getPublisher();
+                }
+            }
+        }
 
         return Optional.empty();
     }
-
 }
