@@ -7,13 +7,8 @@ import com.kenzie.groupwork.productpage.types.ProductV2;
 import com.kenzie.groupwork.productpage.types.ShippingProgramEnum;
 import com.kenzie.groupwork.productpage.types.SortByEnum;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.kenzie.groupwork.productpage.types.SortByEnum.PRICE_HIGH_TO_LOW;
 import static com.kenzie.groupwork.productpage.types.SortByEnum.PRICE_LOW_TO_HIGH;
@@ -41,17 +36,15 @@ public class ProductPage {
      *
      * Golf score: 10
      * Par: 4
-     * Your score:
+     * Your score: 4
      *
      * @return An Optional with the winning BuyingOption, or empty if none.
      */
     public Optional<ProductV2.BuyingOption> getFirstBuyingOption() {
-        List<ProductV2.BuyingOption> buyingOptions = productV2.buyingOptions();
-        if (!buyingOptions.isEmpty()) {
-            return buyingOptions.stream()
-                .findFirst();
-        }
-        return Optional.empty();
+
+        return Optional.of(productV2.buyingOptions()
+                .stream()
+                .findFirst()).orElse(Optional.empty());
     }
 
     /**
@@ -62,25 +55,21 @@ public class ProductPage {
      *
      * Golf score: 18
      * Par: 8
-     * Your score:
+     * Your score: 8
      *
      * @param longestDimension The size of the longest dimension of the image.
      * @return Optional containing the image URL, or empty if no image exists.
      */
     public Optional<String> extractMainImageUrl(Integer longestDimension) {
-        Optional<ProductImagesV2> productImagesOptional = productV2.productImages();
-        if (productImagesOptional.isPresent()) {
-            ProductImagesV2 productImages = productImagesOptional.get();
-            List<ProductImagesV2.Image> images = productImages.images();
-            for (ProductImagesV2.Image image : images) {
-                String url = extractImageUrl(image, longestDimension);
-                if (url != null) {
-                    return Optional.of(url);
-                }
-            }
-        }
 
-        return Optional.empty();
+        return Optional.of(productV2.productImages()
+                .map(ProductImagesV2::images)
+                .stream()
+                .flatMap(images -> images.stream()
+                        .filter(image -> image.variant() != null)
+                        .map(image -> extractImageUrl(image, longestDimension)))
+                .filter(Objects::nonNull)
+                .findFirst()).orElse(Optional.empty());
     }
 
     /**
@@ -88,27 +77,21 @@ public class ProductPage {
      *
      * Golf score: 24
      * Par: 11
-     * Your score:
+     * Your score: 11
      *
      * @param longestDimension the size of the image's longest dimension.
      * @return An Optional containing the URL of the image, or empty if no image exists.
      */
     public Optional<String> extractLookImageUrl(Integer longestDimension) {
-        Optional<ProductImagesV2> productImages = productV2.productImages();
-        if (productImages.isPresent()) {
-            ProductImagesV2 productImagesV2 = productImages.get();
-            List<ProductImagesV2.Image> images = productImagesV2.images();
-            for (ProductImagesV2.Image image : images) {
-                String variant = image.variant();
-                if (variant != null && variant.equals(LOOK_VARIANT)) {
-                    String url = extractImageUrl(image, longestDimension);
-                    if (url != null) {
-                        return Optional.of(url);
-                    }
-                }
-            }
-        }
-        return Optional.empty();
+
+        return Optional.of(productV2.productImages()
+                .map(ProductImagesV2::images)
+                .stream()
+                .flatMap(images -> images.stream()
+                        .filter(image -> image.variant() != null && image.variant().contains(LOOK_VARIANT))
+                        .map(image -> extractImageUrl(image, longestDimension)))
+                .filter(Objects::nonNull)
+                .findFirst()).orElse(Optional.empty());
     }
 
     /**
@@ -121,30 +104,26 @@ public class ProductPage {
      *
      * Golf score: 22
      * Par: 24
-     * Your score:
+     * Your score: 21
      */
     public List<ProductV2> getSimilarProducts(final SortByEnum sortBy,
                                               final PriceRangeOption priceRange,
                                               final PrimeOption primeOption) {
 
-        Comparator<ProductV2> sorter = comparatorForSortBy.getOrDefault(sortBy, passthroughComparator());
-        final List<ProductV2> unorderedProducts = productV2.getSimilarProducts();
         final List<ProductV2> matchingProducts = new ArrayList<>();
-        if (unorderedProducts != null) {
-            for (ProductV2 product : unorderedProducts) {
-                if (Objects.nonNull(product) &&
-                    product.isValid() &&
-                    priceRange.priceIsWithin(product.getPrice())) {
-                    for (ShippingProgramEnum shippingProgram : product.getShippingPrograms()) {
-                        if (primeOption.matches(shippingProgram)) {
-                            matchingProducts.add(product);
-                            break;
-                        }
-                    }
-                }
-            }
+        if (productV2.getSimilarProducts() != null) {
+            Optional.ofNullable(productV2.getSimilarProducts())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(product -> Objects.nonNull(product) && product.isValid() && priceRange.priceIsWithin(product.getPrice()))
+                    .forEach(product -> product.getShippingPrograms()
+                            .forEach(shippingProgram -> {
+                                if (primeOption.matches(shippingProgram) && !matchingProducts.contains(product)) {
+                                    matchingProducts.add(product);
+                                }}));
+            matchingProducts.sort(comparatorForSortBy.getOrDefault(sortBy, passthroughComparator()));
         }
-        matchingProducts.sort(sorter);
+
         return matchingProducts;
     }
 
