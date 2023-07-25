@@ -119,6 +119,26 @@
       "comparison": "included",
       "timeout": 10,
       "points": 1
+    },
+    {
+      "name": "Groupwork Stream Test",
+      "setup": "",
+      "run": "./gradlew groupwork-productpage-streamandoptional-test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 1
+    },
+    {
+      "name": "Streams List Processing Stream Test",
+      "setup": "",
+      "run": "./gradlew streams-listprocessing-streamcheck-test",
+      "input": "",
+      "output": "",
+      "comparison": "included",
+      "timeout": 10,
+      "points": 1
     }
   ]
 }
